@@ -12,7 +12,7 @@ from sklearn.metrics import (
 from imblearn.metrics import geometric_mean_score
 import numpy as np
 
-from mutate_labels import MutatedValidation
+from .mutate_labels import MutatedValidation
 
 random.seed(42)
 np.random.seed(42)
