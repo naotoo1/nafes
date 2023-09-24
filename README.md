@@ -19,6 +19,17 @@ nafes can be installed using pip.
 pip install nafes
 ```
 
+If you have installed Prosemble before and want to upgrade to the latest version, you can run the following command in your terminal:
+Prosemble can be installed using pip.
+```python
+pip install -U nafes
+```
+
+
+To install the development version from GitHub using Git, run the following command in your terminal:
+```python
+pip install git+https://github.com/naotoo1/nafes
+```
 
 
 
