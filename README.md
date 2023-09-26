@@ -45,14 +45,3 @@ howpublished= {\url{https://github.com/naotoo1/nafes}},
 }
 ```
 
-If you would like to cite reference the paper for the package, please use this:
-```python
-@misc{Otoo_2023,
-author = {Otoo, Nana Abeka and Abubakar, Muhammad},
-title = {Prototype-based Feature Selection with the Nafes Package},
-year = {2023},
-publisher = {Vixra},
-journal = {Vixra preprint},
-howpublished= {\url{https://vixra.org/abs/2309.0076}},
-}
-
