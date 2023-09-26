@@ -2,7 +2,6 @@
 Prototype-based global feature selection example using the wdbc dataset
 """
 
-import torch
 import numpy as np
 from nafes import (
     dataset,
@@ -30,8 +29,6 @@ if __name__ == "__main__":
 
     # Initialise omega matrix
     omega_init = OmegaInitializers.ONESLINEARTRANSFORMINITIALIZER
-
-    # accelerator = 'gpu' if torch.cuda.is_available() else 'cpu'
 
     # set up the prototype feature selection
     train = NafesPy(
