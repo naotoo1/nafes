@@ -45,7 +45,7 @@ howpublished= {\url{https://github.com/naotoo1/nafes}},
 }
 ```
 
-If you would like to cite reference paper for the package, please use this:
+If you would like to cite reference the paper for the package, please use this:
 ```python
 @misc{Otoo_2023,
 author = {Otoo, Nana Abeka and Abubakar, Muhammad},
