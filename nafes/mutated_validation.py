@@ -1,6 +1,8 @@
 """implementation of Mutation  Validation Score"""
 
 from enum import Enum
+from typing import Union
+
 from dataclasses import dataclass
 import random
 from sklearn.metrics import (
@@ -31,33 +33,28 @@ class TrainRun(int, Enum):
     MUTATED = 1
 
 
-class ResultState(float, Enum):
-    MAX = 1.0
-    MIN = 0.0
-
-
-@dataclass(slots=True)
+@dataclass
 class EvaluationMetric:
     predicted_labels: np.ndarray
     original_labels: np.ndarray
-    metric_score: float | int
+    metric_score: Union[float, int]
 
 
 def get_metric_score(
         predicted_labels: np.ndarray, original_labels: np.ndarray, metric: str
 ) -> EvaluationMetric:
     score = ""
-    match metric:
-        case EvaluationMetricsType.ACCURACY:
-            score = accuracy_score(original_labels, predicted_labels)
-        case EvaluationMetricsType.RECALL:
-            score = recall_score(original_labels, predicted_labels)
-        case EvaluationMetricsType.PRECISION:
-            score = precision_score(original_labels, predicted_labels)
-        case EvaluationMetricsType.ROC_AUC:
-            score = roc_auc_score(original_labels, predicted_labels)
-        case EvaluationMetricsType.G_MEAN:
-            score = geometric_mean_score(original_labels, predicted_labels)
+
+    if metric == EvaluationMetricsType.ACCURACY:
+        score = accuracy_score(original_labels, predicted_labels)
+    if metric == EvaluationMetricsType.RECALL:
+        score = recall_score(original_labels, predicted_labels)
+    if metric == EvaluationMetricsType.PRECISION:
+        score = precision_score(original_labels, predicted_labels)
+    if metric == EvaluationMetricsType.ROC_AUC:
+        score = roc_auc_score(original_labels, predicted_labels)
+    if metric == EvaluationMetricsType.G_MEAN:
+        score = geometric_mean_score(original_labels, predicted_labels)
     return EvaluationMetric(
         predicted_labels=predicted_labels,
         original_labels=original_labels,
@@ -65,7 +62,7 @@ def get_metric_score(
     )
 
 
-@dataclass(slots=True)
+@dataclass
 class MutatedValidationScore:
     mutated_labels: MutatedValidation
     mutate: np.ndarray
@@ -98,7 +95,6 @@ class MutatedValidationScore:
         )
 
     @property
-    # def compute_mv_score(self):
     def get_mv_score(self):
         return (
                 (
@@ -111,4 +107,3 @@ class MutatedValidationScore:
                 )
                 + self.mutated_labels.perturbation_ratio
         )
-
