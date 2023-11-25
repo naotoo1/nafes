@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import random
 
 import numpy as np
+from typing import List
 
 random.seed(4)
 np.random.seed(4)
@@ -22,18 +23,18 @@ class PerturbationDistribution(str, Enum):
     BALANCEDCLASSAWARE = "balanced"
 
 
-@dataclass(slots=True)
+@dataclass
 class TargetsInfo:
     unique_labels: np.ndarray
     mutation_value: int
     label_indices: np.ndarray
 
 
-@dataclass(slots=True)
+@dataclass
 class MutatedValidationSet:
     dataset: np.ndarray
-    mutated_labels: list[int]
-    original_labels: list[int]
+    mutated_labels: List[int]
+    original_labels: List[int]
 
 
 def get_target_info(labels: np.ndarray, perturbation_ratio: float) -> TargetsInfo:
@@ -45,7 +46,9 @@ def get_target_info(labels: np.ndarray, perturbation_ratio: float) -> TargetsInf
 
 
 def mutate_targets_randomly(
-    labels: np.ndarray, random_label_indices: list[int], swapped_labels: list[int]
+        labels: np.ndarray,
+        random_label_indices: List[int],
+        swapped_labels: List[int]
 ):
     for index_mutated, mutated_labels in zip(random_label_indices, swapped_labels):
         for index_original, _original_labels in enumerate(labels):
@@ -53,7 +56,7 @@ def mutate_targets_randomly(
                 labels[index_original] = mutated_labels
 
 
-def mutate_targets_next_in_list(labels: np.ndarray, random_label_indices: list[int]):
+def mutate_targets_next_in_list(labels: np.ndarray, random_label_indices: List[int]):
     last_label_index = np.arange(len(labels))[-1]
     list_indices_for_mutation = [
         index + 1 if index != last_label_index else 0 for index in random_label_indices
@@ -67,28 +70,26 @@ def mutate_targets_next_in_list(labels: np.ndarray, random_label_indices: list[i
 
 
 def mutate_targets(
-    perturbation_type: str,
-    labels: np.ndarray,
-    random_label_indices: list[int],
-    swapped_labels: list[int],
+        perturbation_type: str,
+        labels: np.ndarray,
+        random_label_indices: List[int],
+        swapped_labels: List[int],
 ) -> None:
-    match perturbation_type:
-        case MutationType.SWAPLABEL:
-            mutate_targets_randomly(labels, random_label_indices, swapped_labels)
-        case MutationType.SWAPNEXTLABEL:
-            mutate_targets_next_in_list(labels, random_label_indices)
-        case _:
-            raise RuntimeError("mutate_targets: none of the checks did match")
+    if perturbation_type == MutationType.SWAPLABEL:
+        mutate_targets_randomly(labels, random_label_indices, swapped_labels)
+    if perturbation_type == MutationType.SWAPNEXTLABEL:
+        mutate_targets_next_in_list(labels, random_label_indices)
+    # raise RuntimeError("mutate_targets: none of the checks did match")
 
 
 def get_random_label_indices_list(
-    cardinality_of_target_space: list[int],
-    sorted_indices_targets: list[int],
-    class_aware_mutation_ratio: list[int],
-) -> list[int]:
+        cardinality_of_target_space: List[int],
+        sorted_indices_targets: List[int],
+        class_aware_mutation_ratio: List[int],
+) -> List[int]:
     count, random_label_indices_list = 0, []
     for index, size in enumerate(cardinality_of_target_space):
-        sorted_label_indices = sorted_indices_targets[count : count + size]
+        sorted_label_indices = sorted_indices_targets[count: count + size]
         random_label_indices = random.sample(
             sorted(sorted_label_indices), class_aware_mutation_ratio[index]
         )
@@ -98,37 +99,35 @@ def get_random_label_indices_list(
 
 
 def get_class_ratio(
-    cardinality_of_target_space: list[int],
-    target_information: TargetsInfo,
-    perturbation_distribution: str,
-) -> list[int]:
-    match perturbation_distribution:
-        case PerturbationDistribution.BALANCEDCLASSAWARE:
-            return [
-                round(
-                    (
+        cardinality_of_target_space: List[int],
+        target_information: TargetsInfo,
+        perturbation_distribution: str,
+) -> List[int]:
+    if perturbation_distribution == PerturbationDistribution.BALANCEDCLASSAWARE:
+        return [
+            round(
+                (
                         weight
                         / np.sum(cardinality_of_target_space)
                         * target_information.mutation_value
-                    )
                 )
-                for weight in cardinality_of_target_space
-            ]
-        case PerturbationDistribution.UNIFORMCLASSAWARE:
-            return [
-                round(
-                    (
+            )
+            for weight in cardinality_of_target_space
+        ]
+    if perturbation_distribution == PerturbationDistribution.UNIFORMCLASSAWARE:
+        return [
+            round(
+                (
                         target_information.mutation_value
                         / len(cardinality_of_target_space)
-                    )
                 )
-                for _weight in cardinality_of_target_space
-            ]
-        case _:
-            raise RuntimeError("get_class_ratio: none of the checks did match")
+            )
+            for _weight in cardinality_of_target_space
+        ]
+    raise RuntimeError("get_class_ratio: none of the checks did match")
 
 
-@dataclass(slots=True)
+@dataclass
 class MutatedValidation:
     labels: np.ndarray
     perturbation_ratio: float
@@ -137,19 +136,19 @@ class MutatedValidation:
 
     @property
     def __mutated_targets_list(
-        self,
+            self,
     ) -> np.ndarray:
         target_information: TargetsInfo = get_target_info(
             self.labels, self.perturbation_ratio
         )
-        random_label_indices: list[int] = random.sample(
+        random_label_indices: List[int] = random.sample(
             sorted(target_information.label_indices), target_information.mutation_value
         )
-        random_instances_labels: list[int] = [
+        random_instances_labels: List[int] = [
             self.labels[index] for index in random_label_indices
         ]
 
-        swapped_labels: list[int] = [
+        swapped_labels: List[int] = [
             np.random.choice(
                 [
                     unique_label
@@ -169,7 +168,7 @@ class MutatedValidation:
         return original_labels
 
     def __mutated_targets_class_level_balanced(
-        self, perturbation_distribution: str
+            self, perturbation_distribution: str
     ) -> np.ndarray:
         target_information: TargetsInfo = get_target_info(
             self.labels, self.perturbation_ratio
@@ -191,11 +190,11 @@ class MutatedValidation:
             class_aware_mutation_ratio,
         )
 
-        random_instances_labels: list[int] = [
+        random_instances_labels: List[int] = [
             self.labels[index] for index in random_label_indices_merged
         ]
 
-        swapped_labels: list[int] = [
+        swapped_labels: List[int] = [
             np.random.choice(
                 [
                     unique_label
@@ -217,18 +216,16 @@ class MutatedValidation:
 
     @property
     def get_mutated_label_list(self):
-        match self.perturbation_distribution:
-            case PerturbationDistribution.GLOBAL:
-                return self.__mutated_targets_list
-            case PerturbationDistribution.BALANCEDCLASSAWARE:
-                return self.__mutated_targets_class_level_balanced(
-                    PerturbationDistribution.BALANCEDCLASSAWARE
-                )
-            case PerturbationDistribution.UNIFORMCLASSAWARE:
-                return self.__mutated_targets_class_level_balanced(
-                    PerturbationDistribution.UNIFORMCLASSAWARE
-                )
-            case _:
-                raise RuntimeError(
-                    "get_mutated_label_list: none of the checks did match"
-                )
+        if self.perturbation_distribution == PerturbationDistribution.GLOBAL:
+            return self.__mutated_targets_list
+        if self.perturbation_distribution == PerturbationDistribution.BALANCEDCLASSAWARE:
+            return self.__mutated_targets_class_level_balanced(
+                PerturbationDistribution.BALANCEDCLASSAWARE
+            )
+        if self.perturbation_distribution == PerturbationDistribution.UNIFORMCLASSAWARE:
+            return self.__mutated_targets_class_level_balanced(
+                PerturbationDistribution.UNIFORMCLASSAWARE
+            )
+        raise RuntimeError(
+            "get_mutated_label_list: none of the checks did match"
+        )

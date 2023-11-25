@@ -25,11 +25,12 @@ from sklearn.model_selection import train_test_split
 from torch.utils import data
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
-
-
 from .mutate_labels import MutatedValidation
-from .mutated_validation import MutatedValidationScore, TrainRun, EvaluationMetricsType
-
+from .mutated_validation import (
+    MutatedValidationScore,
+    TrainRun,
+    EvaluationMetricsType,
+)
 
 
 torch.set_float32_matmul_precision(precision="high")
@@ -175,10 +176,10 @@ logging.basicConfig(
 
 
 def evaluation_metric_logs(
-        evaluation_metric_scores: list[float | int],
-        model_name: str,
-        validation: str,
-        log: bool = True,
+    evaluation_metric_scores: list[float | int],
+    model_name: str,
+    validation: str,
+    log: bool = True,
 ) -> None:
     report = [{validation: evaluation_metric_scores}]
     match log:
@@ -187,25 +188,25 @@ def evaluation_metric_logs(
 
 
 def train_hold_out(
-        input_data: np.ndarray,
-        labels: np.ndarray,
-        model_name: str,
-        optimal_search: str,
-        input_dim: int,
-        latent_dim: int,
-        num_classes: int,
-        num_prototypes: int = 1,
-        proto_lr: float = 0.01,
-        bb_lr: float = 0.01,
-        optimizer=torch.optim.Adam,
-        proto_initializer: str = "SMCI",
-        omega_matrix_initializer: str = "OLTI",
-        save_model: bool = False,
-        max_epochs: int = 100,
-        noise: float = 0.1,
-        batch_size: int = 128,
-        num_workers: int = 4,
-        evaluation_metric: str = EvaluationMetricsType.ACCURACY.value,
+    input_data: np.ndarray,
+    labels: np.ndarray,
+    model_name: str,
+    optimal_search: str,
+    input_dim: int,
+    latent_dim: int,
+    num_classes: int,
+    num_prototypes: int = 1,
+    proto_lr: float = 0.01,
+    bb_lr: float = 0.01,
+    optimizer=torch.optim.Adam,
+    proto_initializer: str = "SMCI",
+    omega_matrix_initializer: str = "OLTI",
+    save_model: bool = False,
+    max_epochs: int = 100,
+    noise: float = 0.1,
+    batch_size: int = 128,
+    num_workers: int = 4,
+    evaluation_metric: str = EvaluationMetricsType.ACCURACY.value,
 ) -> TrainModelSummary:
     prototypes, omega_matrix = [], []
     X_train, X_test, y_train, y_test = train_test_split(
@@ -268,27 +269,27 @@ def train_hold_out(
 
 
 def train_model_by_mv(
-        input_data: np.ndarray,
-        labels: np.ndarray,
-        model_name: str,
-        optimal_search: str,
-        input_dim: int,
-        latent_dim: int,
-        num_classes: int,
-        num_prototypes: int = 1,
-        proto_lr: float = 0.01,
-        bb_lr: float = 0.01,
-        optimizer=torch.optim.Adam,
-        proto_initializer: str = "SMCI",
-        omega_matrix_initializer="OLTI",
-        save_model: bool = False,
-        max_epochs: int = 100,
-        noise: float = 0.1,
-        perturbation_distribution: str = "balanced",
-        perturbation_ratio: float = 0.2,
-        batch_size: int = 128,
-        num_workers: int = 4,
-        evaluation_metric: str = EvaluationMetricsType.ACCURACY.value,
+    input_data: np.ndarray,
+    labels: np.ndarray,
+    model_name: str,
+    optimal_search: str,
+    input_dim: int,
+    latent_dim: int,
+    num_classes: int,
+    num_prototypes: int = 1,
+    proto_lr: float = 0.01,
+    bb_lr: float = 0.01,
+    optimizer=torch.optim.Adam,
+    proto_initializer: str = "SMCI",
+    omega_matrix_initializer="OLTI",
+    save_model: bool = False,
+    max_epochs: int = 100,
+    noise: float = 0.1,
+    perturbation_distribution: str = "balanced",
+    perturbation_ratio: float = 0.2,
+    batch_size: int = 128,
+    num_workers: int = 4,
+    evaluation_metric: str = EvaluationMetricsType.ACCURACY.value,
 ) -> TrainModelSummary:
     x_input = torch.from_numpy(input_data).to(torch.float32)
     y_label = torch.from_numpy(labels).to(torch.float32)
@@ -396,18 +397,18 @@ def train_model_by_mv(
 
 
 def matrix_glvq(
-        model: str,
-        train_ds: data.TensorDataset,
-        input_dim: int,
-        latent_dim: int,
-        num_prototypes: int,
-        num_classes: int,
-        proto_lr: float,
-        bb_lr: float,
-        optimizer=torch.optim.Adam,
-        proto_initializer: str = "SMCI",
-        omega_matrix_initializer: str = "OLTI",
-        noise: float = 0.1,
+    model: str,
+    train_ds: data.TensorDataset,
+    input_dim: int,
+    latent_dim: int,
+    num_prototypes: int,
+    num_classes: int,
+    proto_lr: float,
+    bb_lr: float,
+    optimizer=torch.optim.Adam,
+    proto_initializer: str = "SMCI",
+    omega_matrix_initializer: str = "OLTI",
+    noise: float = 0.1,
 ) -> ps.GMLVQ | ps.LGMLVQ:
     prototype_initializer = get_prototype_initializers(
         initializer=proto_initializer,
@@ -461,10 +462,10 @@ def model_trainer(search: str, max_epoch: int) -> pl.Trainer:  # type: ignore
 
 
 def get_omega_initializers(
-        initializer: str,
-        train_ds: data.TensorDataset,
-        out_dim_first: bool = False,
-        noise: float = 0,
+    initializer: str,
+    train_ds: data.TensorDataset,
+    out_dim_first: bool = False,
+    noise: float = 0,
 ):
     match initializer:
         case OmegaInitializers.EYELINEARTRANSFORMINITIALIZER:
@@ -484,15 +485,15 @@ def get_omega_initializers(
 
 
 def get_prototype_initializers(
-        initializer: str,
-        train_ds: data.TensorDataset,
-        pre_initialised_prototypes: torch.Tensor | None = None,
-        scale: float = 1,
-        shift: float = 0,
-        fill_value: float = 1,
-        minimum: float = 0,
-        maximum: float = 1,
-        noise: float = 0,
+    initializer: str,
+    train_ds: data.TensorDataset,
+    pre_initialised_prototypes: torch.Tensor | None = None,
+    scale: float = 1,
+    shift: float = 0,
+    fill_value: float = 1,
+    minimum: float = 0,
+    maximum: float = 1,
+    noise: float = 0,
 ):
     match initializer:
         case PrototypeInitializers.STRATIFIEDMEANSCOMPONENTINITIALIZER:
@@ -533,11 +534,11 @@ def get_prototype_initializers(
 
 
 def save_train_model(
-        *,
-        saved_model_dir: str,
-        model_name: str,
-        estimator: ps.GMLVQ | ps.LGMLVQ,
-        scoring_metric: str,
+    *,
+    saved_model_dir: str,
+    model_name: str,
+    estimator: ps.GMLVQ | ps.LGMLVQ,
+    scoring_metric: str,
 ):
     Path(saved_model_dir).mkdir(parents=True, exist_ok=True)
     try:
@@ -641,7 +642,7 @@ class NafesPy:
             )
             omega_matrix = train_eval_scheme.final_omega_matrix
             num_prototypes = (
-                    len((train_eval_scheme.final_prototypes[0]).numpy()) // self.num_classes
+                len((train_eval_scheme.final_prototypes[0]).numpy()) // self.num_classes
             )
             metric_list.append(validation_score[0])
             matrix_list.append(omega_matrix[0])
@@ -830,7 +831,7 @@ class NafesPy:
 
 
 def get_lambda_matrix(
-        omega_matrix: list[torch.Tensor], feature_list: list[str] | None = None
+    omega_matrix: list[torch.Tensor], feature_list: list[str] | None = None
 ) -> GlobalRelevanceFactorsSummary:
     omega = omega_matrix[0]
     lambda_matrix = omega.T @ omega
@@ -853,10 +854,10 @@ def get_lambda_matrix(
 
 
 def get_local_lambda_matrix(
-        omega_matrix: list[torch.Tensor],
-        num_classes: int,
-        num_prototypes: int,
-        feature_list: list[str] | None = None,
+    omega_matrix: list[torch.Tensor],
+    num_classes: int,
+    num_prototypes: int,
+    feature_list: list[str] | None = None,
 ) -> LocalRelevanceFactorSummary:
     omega = omega_matrix[0]
     (
@@ -898,11 +899,11 @@ def get_local_lambda_matrix(
 
 
 def get_relevance_global_summary(
-        lambda_row_sum: np.ndarray,
-        weight_significance: np.ndarray,
-        evaluation_metric_score: float,
-        significance: bool,
-        verbose: int = 0,
+    lambda_row_sum: np.ndarray,
+    weight_significance: np.ndarray,
+    evaluation_metric_score: float,
+    significance: bool,
+    verbose: int = 0,
 ) -> SelectedRelevances:
     significant, insignificant = [], []
     select_vector = weight_significance if significance is True else lambda_row_sum
@@ -923,7 +924,7 @@ def get_relevance_global_summary(
 
         case False:
             for feature_index, feature_label in enumerate(
-                    np.argsort(lambda_row_sum)[::-1], start=1
+                np.argsort(lambda_row_sum)[::-1], start=1
             ):
                 cond = float(lambda_row_sum[feature_label]) > 0
                 match cond:
@@ -958,9 +959,9 @@ def get_relevance_global_summary(
 
 
 def get_relevance_summary(
-        feature_significance: np.ndarray,
-        evaluation_metric_score: float,
-        verbose: int = 0,
+    feature_significance: np.ndarray,
+    evaluation_metric_score: float,
+    verbose: int = 0,
 ) -> SelectedRelevances:
     significant_features = []
 
@@ -1007,8 +1008,8 @@ def get_relevance_summary(
 
 
 def get_eval_score(
-        evaluation_metric_score: float,
-        verbose: int = 0,
+    evaluation_metric_score: float,
+    verbose: int = 0,
 ):
     match verbose:
         case Verbose.YES:
@@ -1028,10 +1029,10 @@ def get_eval_score(
 
 
 def get_global_logs(
-        index: int,
-        class_relevance: int,
-        verbose: int = 0,
-        state: str = "pass",
+    index: int,
+    class_relevance: int,
+    verbose: int = 0,
+    state: str = "pass",
 ) -> SelectedRelevances:
     significant_features, insignificant = [], []
     verbosity = verbose == Verbose.YES
@@ -1082,11 +1083,11 @@ def get_global_logs(
 
 
 def get_relevance_logs(
-        label: int,
-        index: int,
-        feature_label: str,
-        verbose: int = 0,
-        state: str = "pass",
+    label: int,
+    index: int,
+    feature_label: str,
+    verbose: int = 0,
+    state: str = "pass",
 ) -> SelectedRelevances:
     significant_features, insignificant = (
         [],
@@ -1145,13 +1146,13 @@ def get_relevance_logs(
 
 
 def get_relevance_elimination_summary(
-        weight_significance: np.ndarray,
-        num_protypes_per_class: int,
-        num_classes: int,
-        input_dim: int,
-        lambda_row_sum: np.ndarray,
-        evaluation_metric_score: float,
-        verbose: int = 0,
+    weight_significance: np.ndarray,
+    num_protypes_per_class: int,
+    num_classes: int,
+    input_dim: int,
+    lambda_row_sum: np.ndarray,
+    evaluation_metric_score: float,
+    verbose: int = 0,
 ) -> SelectedRelevancesExtra:
     significant, insignificant = [], []
     get_eval_score(
@@ -1169,7 +1170,7 @@ def get_relevance_elimination_summary(
     for class_label, weight_summary in enumerate(weight_significance):
         for index, class_relevance in enumerate(weight_summary):
             for _feature_index, feature_label in enumerate(
-                    np.argsort(class_relevance)[::-1]
+                np.argsort(class_relevance)[::-1]
             ):
                 classwise_relevance = list(lambda_row_sum[index])
                 cond_1 = float(classwise_relevance[feature_label]) > 0
@@ -1215,7 +1216,7 @@ def get_hits_significance(summary_list: np.ndarray) -> HitsInfo:
 
 
 def get_matrix_stability(
-        matrix1, matrix2, epsilon: float | None, matrix_ord: str
+    matrix1, matrix2, epsilon: float | None, matrix_ord: int | str
 ) -> bool:
     distance = (ln.norm((matrix2 - matrix1), ord=matrix_ord)).numpy()
     if epsilon is not None:
@@ -1224,9 +1225,9 @@ def get_matrix_stability(
 
 
 def get_metric_stability(
-        metric1: float,
-        metric2: float,
-        epsilon: float | None,
+    metric1: float,
+    metric2: float,
+    epsilon: float | None,
 ) -> bool:
     metric1, metric2 = np.round(metric1, 2), np.round(metric2, 2)
     difference = metric2 - metric1
@@ -1236,14 +1237,14 @@ def get_metric_stability(
 
 
 def get_stability(
-        metric1: float,
-        metric2: float,
-        matrix1: torch.Tensor,
-        matrix2: torch.Tensor,
-        convergence: str,
-        epsilon: float | None,
-        learner: str,
-        matrix_ord: str,
+    metric1: float,
+    metric2: float,
+    matrix1: torch.Tensor,
+    matrix2: torch.Tensor,
+    convergence: str,
+    epsilon: float | None,
+    learner: str,
+    matrix_ord: str,
 ) -> bool:
     match (convergence, learner):
         case ("metric", LVQ.GMLVQ):
@@ -1276,10 +1277,10 @@ def get_stability(
 
 
 def visualize(
-        features: list,
-        hits: list,
-        significance: bool,
-        eval_score: float | None,
+    features: list,
+    hits: list,
+    significance: bool,
+    eval_score: float | None,
 ):
     relevance = "significant " if significance is True else "insignificant"
     _fig, ax = plt.subplots()
@@ -1293,10 +1294,10 @@ def visualize(
 
 
 def reject_strategy(
-        significant: list,
-        insignificant: list,
-        significant_hit: list,
-        insignificant_hit: list,
+    significant: list,
+    insignificant: list,
+    significant_hit: list,
+    insignificant_hit: list,
 ) -> LocalRejectStrategy:
     intersection = list(set(significant) & set(insignificant))
 
@@ -1403,11 +1404,11 @@ def reject_strategy(
 
 
 def reject(
-        significant: list,
-        insignificant: list,
-        significant_hit: list,
-        insignificant_hit: list,
-        reject_options: bool,
+    significant: list,
+    insignificant: list,
+    significant_hit: list,
+    insignificant_hit: list,
+    reject_options: bool,
 ) -> LocalRejectStrategy:
     match reject_options:
         case True:
@@ -1426,11 +1427,7 @@ def reject(
             )
         case False:
             return LocalRejectStrategy(
-                significant,
-                insignificant,
-                significant_hit,
-                insignificant_hit,
-                None
+                significant, insignificant, significant_hit, insignificant_hit, None
             )
         case _:
             raise RuntimeError(
@@ -1439,12 +1436,12 @@ def reject(
 
 
 def get_rejection_summary(
-        significant: list,
-        insignificant: list,
-        significant_hit: list,
-        insignificant_hit: list,
-        reject_options: bool,
-        vis: bool,
+    significant: list,
+    insignificant: list,
+    significant_hit: list,
+    insignificant_hit: list,
+    reject_options: bool,
+    vis: bool,
 ) -> LocalRejectStrategy:
     rejected_summary = reject(
         significant,
@@ -1517,9 +1514,4 @@ def seed_everything(seed: int):
 
 
 if __name__ == "__main__":
-    print('import module to use')
-
-
-
-
-
+    print("import module to use")
