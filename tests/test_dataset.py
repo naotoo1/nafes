@@ -25,6 +25,6 @@ class TestWDBC(unittest.TestCase):
         self.input_features = self.input_features[:, [2, 3]]
         self.assertEqual(self.input_features.shape[1], 2)
 
-     def tearDown(self):
+    def tearDown(self):
         del self.input_features , self.labels 
 
