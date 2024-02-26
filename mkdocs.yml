@@ -83,4 +83,3 @@ nav:
         - examples/intro.ipynb
     - API Reference:
           - nafes module: nafes.md
-          - common module: common.md
