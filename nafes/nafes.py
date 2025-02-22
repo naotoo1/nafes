@@ -265,11 +265,11 @@ def train_hold_out(
 
     return TrainModelSummary(
         selected_model_evaluation_metrics_scores=[
-            accuracy_score(y_label_test, outputs)  # type: ignore
+            accuracy_score(y_label_test, outputs)  
         ],
         final_omega_matrix=omega_matrix,
         final_prototypes=prototypes,
-    )  # type: ignore
+    ) 
 
 
 def train_model_by_mv(
@@ -453,7 +453,7 @@ def matrix_glvq(
             )
 
 
-def model_trainer(search: str, max_epoch: int) -> pl.Trainer:  # type: ignore
+def model_trainer(search: str, max_epoch: int) -> pl.Trainer:  
     return pl.Trainer(
         max_epochs=max_epoch,
         enable_progress_bar=True,
@@ -632,7 +632,7 @@ class NafesPy:
         )
     
     @property
-    def final(self) -> BestLearnedResults:  # type: ignore
+    def final(self) -> BestLearnedResults: 
         (metric_list, matrix_list, should_continue, counter) = ([], [], True, -1)
         while should_continue:
             counter += 1
@@ -923,7 +923,7 @@ def get_local_lambda_matrix(
         omega_matrix=omega_matrix,
         lambda_matrix=lambda_matrix,
         lambda_diagonal=lambda_diagonal,
-        lambda_row_sum=lambda_row_sum,  # type: ignore
+        lambda_row_sum=lambda_row_sum,  
         feature_relevance_dict=feature_relevance_dict,
         weight_significance=np.array(weight_significance),
         feature_significance=feature_signficance,
@@ -1234,7 +1234,7 @@ def get_relevance_elimination_summary(
 
 
 def get_hits_significance(summary_list: np.ndarray) -> HitsInfo:
-    summary_dict = Counter(summary_list)  # type: ignore
+    summary_dict = Counter(summary_list)  
     sorted_feature_keys = sorted(
         summary_dict, key=lambda k: (summary_dict[k], k), reverse=True
     )
@@ -1242,7 +1242,7 @@ def get_hits_significance(summary_list: np.ndarray) -> HitsInfo:
     hits = [summary_dict[key] for key in sorted_feature_keys]
 
     return HitsInfo(
-        features=sorted_feature_keys,  # type: ignore
+        features=sorted_feature_keys, 
         hits=hits,
     )
 
