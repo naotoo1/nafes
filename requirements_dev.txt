@@ -9,6 +9,6 @@ tox
 coverage
 Sphinx
 twine
-autopep8==2.0.2
-pytest==7.0.1
+autopep8
+pytest
 
