@@ -41,7 +41,7 @@ if __name__ == "__main__":
         latent_dim=input_data.shape[1],
         num_classes=len(np.unique(labels)),
         num_prototypes=1,
-        eval_type='mv',
+        eval_type='ho',
         evaluation_metric='accuracy',
         perturbation_ratio=0.2,
         perturbation_distribution='balanced',
