@@ -1,8 +1,0 @@
-numpy
-scikit-learn
-pandas
-imbalanced-learn
-torch
-prototorch
-prototorch_models
-pytorch-lightning
