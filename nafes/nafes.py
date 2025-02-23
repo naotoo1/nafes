@@ -664,7 +664,7 @@ class NafesPy:
                 learner=self.model_name,
                 matrix_ord=self.norm_ord,
             )
-
+            # TODO: add here the projected input spaces and prototypes for the purpose of visualization as the algorithm runs
             match (condition, self.termination, stability):
                 case (False, "metric", True):
                     transformed_proto = transformed_prototypes(
