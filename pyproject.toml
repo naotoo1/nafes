@@ -41,8 +41,10 @@ Homepage = "https://github.com/naotoo1/nafes"
 Repository = "https://github.com/naotoo1/nafes"
 Issues = "https://github.com/naotoo1/nafes/issues"
 
-[tool.setuptools]
-packages = ["nafes"]
+[tool]
+[tool.setuptools.packages.find]
+include = ["nafes"]
+exclude = ["docs*"]
 
 [tool.distutils.bdist_wheel]
 universal = true
