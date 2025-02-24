@@ -31,10 +31,4 @@ def transformed_prototypes(model:str,omega:torch.Tensor,p_prototypes: torch.Tens
                     "feature_selection: none of the checks did match",
             )
 
-def project_input_space_generalised(omega:torch.Tensor, input_space:torch.Tensor )-> torch.Tensor:
-    return input_space @ omega
-
-# TODO: gets complex and makes sense for only one prototype per class
-def project_localised_input_space():
-    pass
 
