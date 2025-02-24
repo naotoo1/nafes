@@ -104,3 +104,6 @@ ENV/
 
 # IDE settings
 .vscode/
+
+*.txt
+!requirements_docs.txt

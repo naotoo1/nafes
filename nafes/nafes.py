@@ -31,6 +31,7 @@ from .mutated_validation import (
     TrainRun,
     EvaluationMetricsType,
 )
+from .transform import transformed_prototypes
 
 
 torch.set_float32_matmul_precision(precision="high")
@@ -115,6 +116,9 @@ class BestLearnedResults:
     omega_matrix: list[torch.Tensor]
     evaluation_metric_score: list[float | int]
     num_prototypes: int
+    projected_prototypes: list[torch.Tensor]
+    transformed_prototypes: list[torch.Tensor]
+    
 
 
 @dataclass
@@ -261,11 +265,11 @@ def train_hold_out(
 
     return TrainModelSummary(
         selected_model_evaluation_metrics_scores=[
-            accuracy_score(y_label_test, outputs)  # type: ignore
+            accuracy_score(y_label_test, outputs)  
         ],
         final_omega_matrix=omega_matrix,
         final_prototypes=prototypes,
-    )  # type: ignore
+    ) 
 
 
 def train_model_by_mv(
@@ -449,7 +453,7 @@ def matrix_glvq(
             )
 
 
-def model_trainer(search: str, max_epoch: int) -> pl.Trainer:  # type: ignore
+def model_trainer(search: str, max_epoch: int) -> pl.Trainer:  
     return pl.Trainer(
         max_epochs=max_epoch,
         enable_progress_bar=True,
@@ -626,9 +630,9 @@ class NafesPy:
             omega_matrix_initializer=self.omega_matrix_initializer,
             max_epochs=self.max_epochs,
         )
-
+    
     @property
-    def final(self) -> BestLearnedResults:  # type: ignore
+    def final(self) -> BestLearnedResults: 
         (metric_list, matrix_list, should_continue, counter) = ([], [], True, -1)
         while should_continue:
             counter += 1
@@ -641,6 +645,7 @@ class NafesPy:
                 train_eval_scheme.selected_model_evaluation_metrics_scores
             )
             omega_matrix = train_eval_scheme.final_omega_matrix
+            p_prototypes = train_eval_scheme.final_prototypes
             num_prototypes = (
                 len((train_eval_scheme.final_prototypes[0]).numpy()) // self.num_classes
             )
@@ -662,38 +667,64 @@ class NafesPy:
 
             match (condition, self.termination, stability):
                 case (False, "metric", True):
+                    transformed_proto = transformed_prototypes(
+                        self.model_name,
+                        omega_matrix[0],
+                        p_prototypes[0]
+                    )
                     should_continue = False
                     return BestLearnedResults(
                         omega_matrix=omega_matrix,
                         evaluation_metric_score=validation_score,
                         num_prototypes=num_prototypes,
+                        transformed_prototypes=transformed_proto,
+                        projected_prototypes=p_prototypes[0]
                     )
                 case (False, "matrix", True):
+                    transformed_proto = transformed_prototypes(
+                        self.model_name,
+                        omega_matrix[0],
+                        p_prototypes[0]
+                    )
                     should_continue = False
                     return BestLearnedResults(
                         omega_matrix=omega_matrix,
                         evaluation_metric_score=validation_score,
                         num_prototypes=num_prototypes,
+                        transformed_prototypes=transformed_proto,
+                        projected_prototypes=p_prototypes[0] 
                     )
                 case (True, "metric", True):
+                    transformed_proto = transformed_prototypes(
+                        self.model_name,
+                        omega_matrix[0],
+                        p_prototypes[0]
+                    )
                     should_continue = False
                     return BestLearnedResults(
                         omega_matrix=omega_matrix,
                         evaluation_metric_score=validation_score,
                         num_prototypes=num_prototypes,
+                        transformed_prototypes=transformed_proto,
+                        projected_prototypes=p_prototypes[0]
                     )
                 case (True, "matrix", True):
+                    transformed_proto = transformed_prototypes(self.model_name,
+                        omega_matrix[0],p_prototypes[0]
+                    )
                     should_continue = False
                     return BestLearnedResults(
                         omega_matrix=omega_matrix,
                         evaluation_metric_score=validation_score,
                         num_prototypes=num_prototypes,
+                        transformed_prototypes=transformed_proto,
+                        projected_prototypes=p_prototypes[0]
                     )
                 # case _:
                 #     raise RuntimeError("final:none of the above cases match")
 
     @property
-    def feature_selection(self) -> GlobalFeatureSelection | LocalFeatureSelection:  # type: ignore
+    def feature_selection(self) -> GlobalFeatureSelection | LocalFeatureSelection: 
         match (self.model_name, self.eval_type):
             case (LVQ.GMLVQ, ValidationType.MUTATEDVALIDATION.value):
                 train_eval_scheme = self.final
@@ -767,7 +798,7 @@ class NafesPy:
         match (self.model_name, self.significance):
             case (LVQ.LGMLVQ, True):
                 summary = get_relevance_summary(
-                    feature_significance=feature_selection.relevance.feature_significance,  # type: ignore
+                    feature_significance=feature_selection.relevance.feature_significance,  
                     evaluation_metric_score=feature_selection.eval_score[0],
                     verbose=self.verbose,
                 )
@@ -782,7 +813,8 @@ class NafesPy:
                     lambda_row_sum=feature_selection.relevance.lambda_row_sum,
                     evaluation_metric_score=feature_selection.eval_score[0],
                     verbose=self.verbose,
-                    input_dim=self.input_dim,
+                    # input_dim=self.input_dim,
+                    input_dim=self.latent_dim,
                     num_classes=self.num_classes,
                 )
 
@@ -891,7 +923,7 @@ def get_local_lambda_matrix(
         omega_matrix=omega_matrix,
         lambda_matrix=lambda_matrix,
         lambda_diagonal=lambda_diagonal,
-        lambda_row_sum=lambda_row_sum,  # type: ignore
+        lambda_row_sum=lambda_row_sum,  
         feature_relevance_dict=feature_relevance_dict,
         weight_significance=np.array(weight_significance),
         feature_significance=feature_signficance,
@@ -1202,7 +1234,7 @@ def get_relevance_elimination_summary(
 
 
 def get_hits_significance(summary_list: np.ndarray) -> HitsInfo:
-    summary_dict = Counter(summary_list)  # type: ignore
+    summary_dict = Counter(summary_list)  
     sorted_feature_keys = sorted(
         summary_dict, key=lambda k: (summary_dict[k], k), reverse=True
     )
@@ -1210,7 +1242,7 @@ def get_hits_significance(summary_list: np.ndarray) -> HitsInfo:
     hits = [summary_dict[key] for key in sorted_feature_keys]
 
     return HitsInfo(
-        features=sorted_feature_keys,  # type: ignore
+        features=sorted_feature_keys, 
         hits=hits,
     )
 
@@ -1509,8 +1541,8 @@ def seed_everything(seed: int):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True  # type: ignore
-    torch.backends.cudnn.benchmark = True  # type: ignore
+    torch.backends.cudnn.deterministic = True 
+    torch.backends.cudnn.benchmark = True  
 
 
 if __name__ == "__main__":
