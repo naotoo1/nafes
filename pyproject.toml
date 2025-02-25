@@ -64,12 +64,6 @@ filename = "nafes/__init__.py"
 search = '__version__ = "{current_version}"'
 replace = '__version__ = "{new_version}"'
 
-[tool.flake8]
-exclude = [
-    "docs",
-]
-max-line-length = 88
-
 [project.optional-dependencies]
 dev = [
     "black",

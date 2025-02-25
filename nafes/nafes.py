@@ -166,7 +166,9 @@ class TrainModelSummary:
 def reset_weights(m):
     for layer in m.children():
         if hasattr(layer, "reset_parameters"):
-            print(f"Reset trainable parameters of layer = {layer}")
+            print(
+                f"Reset trainable parameters of layer = {layer}"
+            )
             layer.reset_parameters()
 
 
@@ -520,7 +522,9 @@ def get_prototype_initializers(
             return pci.DACI(data=train_ds.tensors[0], noise=noise)
         case PrototypeInitializers.RANDOMNORMALCOMPONENTINITIALIZER:
             return pci.RNCI(
-                shape=train_ds.tensors[0].size()[1], shift=shift, scale=scale
+                shape=train_ds.tensors[0].size()[1], 
+                shift=shift, 
+                scale=scale
             )
         case PrototypeInitializers.FILLVALUECOMPONENTINITIALIZER:
             return pci.FVCI(train_ds.tensors[0].size()[1], fill_value)
@@ -633,7 +637,9 @@ class NafesPy:
     
     @property
     def final(self) -> BestLearnedResults: 
-        (metric_list, matrix_list, should_continue, counter) = ([], [], True, -1)
+        (metric_list, matrix_list, should_continue, counter) = (
+            [], [], True, -1
+        )
         while should_continue:
             counter += 1
             train_eval_scheme = (
@@ -647,7 +653,9 @@ class NafesPy:
             omega_matrix = train_eval_scheme.final_omega_matrix
             p_prototypes = train_eval_scheme.final_prototypes
             num_prototypes = (
-                len((train_eval_scheme.final_prototypes[0]).numpy()) // self.num_classes
+                len(
+                    (train_eval_scheme.final_prototypes[0]).numpy()
+                ) // self.num_classes
             )
             metric_list.append(validation_score[0])
             matrix_list.append(omega_matrix[0])
@@ -709,8 +717,10 @@ class NafesPy:
                         projected_prototypes=p_prototypes[0]
                     )
                 case (True, "matrix", True):
-                    transformed_proto = transformed_prototypes(self.model_name,
-                        omega_matrix[0],p_prototypes[0]
+                    transformed_proto = transformed_prototypes(
+                        self.model_name,
+                        omega_matrix[0],
+                        p_prototypes[0]
                     )
                     should_continue = False
                     return BestLearnedResults(
@@ -859,7 +869,9 @@ class NafesPy:
                     insignificant=np.array(summary.insignificant).flatten(),
                 )
             case _:
-                raise RuntimeError("summary_results: none of the above cases match")
+                raise RuntimeError(
+                    "summary_results: none of the above cases match"
+                )
 
 
 def get_lambda_matrix(
@@ -1242,7 +1254,7 @@ def get_hits_significance(summary_list: np.ndarray) -> HitsInfo:
     hits = [summary_dict[key] for key in sorted_feature_keys]
 
     return HitsInfo(
-        features=sorted_feature_keys, 
+        features=np.array(sorted_feature_keys), 
         hits=hits,
     )
 
@@ -1451,11 +1463,11 @@ def reject(
                 insignificant_hit,
             )
             return LocalRejectStrategy(
-                significant=strategy.significant,
-                insignificant=strategy.insignificant,
-                significant_hit=strategy.significant_hit,
-                insignificant_hit=strategy.insignificant_hit,
-                tentative=strategy.tentative,
+                significant=np.array(strategy.significant),
+                insignificant=np.array(strategy.insignificant),
+                significant_hit=np.array(strategy.significant_hit),
+                insignificant_hit=np.array(strategy.insignificant_hit),
+                tentative=np.array(strategy.tentative),
             )
         case False:
             return LocalRejectStrategy(

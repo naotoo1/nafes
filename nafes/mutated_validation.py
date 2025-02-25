@@ -1,18 +1,17 @@
-"""implementation of Mutation  Validation Score"""
+"""Implementation of Mutation Validation Score"""
 
 from enum import Enum
 from typing import Union
-
 from dataclasses import dataclass
 import random
+import numpy as np
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
     roc_auc_score,
-    recall_score
+    recall_score,
 )
 from imblearn.metrics import geometric_mean_score
-import numpy as np
 
 from .mutate_labels import MutatedValidation
 
@@ -41,7 +40,9 @@ class EvaluationMetric:
 
 
 def get_metric_score(
-        predicted_labels: np.ndarray, original_labels: np.ndarray, metric: str
+    predicted_labels: np.ndarray,
+    original_labels: np.ndarray,
+    metric: str,
 ) -> EvaluationMetric:
     score = ""
 
@@ -55,6 +56,7 @@ def get_metric_score(
         score = roc_auc_score(original_labels, predicted_labels)
     if metric == EvaluationMetricsType.G_MEAN:
         score = geometric_mean_score(original_labels, predicted_labels)
+
     return EvaluationMetric(
         predicted_labels=predicted_labels,
         original_labels=original_labels,
@@ -97,13 +99,13 @@ class MutatedValidationScore:
     @property
     def get_mv_score(self):
         return (
-                (
-                        (1 - 2 * self.mutated_labels.perturbation_ratio)
-                        * self.mutated_training_metric_score_based_original_labels.metric_score
-                )
-                + (
-                        self.original_training_metric_score_based_on_original_labels.metric_score
-                        - self.mutated_training_metric_score_based_mutated_labels.metric_score
-                )
-                + self.mutated_labels.perturbation_ratio
+            (
+                (1 - 2 * self.mutated_labels.perturbation_ratio)
+                * self.mutated_training_metric_score_based_original_labels.metric_score
+            )
+            + (
+                self.original_training_metric_score_based_on_original_labels.metric_score
+                - self.mutated_training_metric_score_based_mutated_labels.metric_score
+            )
+            + self.mutated_labels.perturbation_ratio
         )
