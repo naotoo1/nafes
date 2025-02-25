@@ -6,7 +6,11 @@ import random
 import numpy as np
 from dataclasses import dataclass
 import torch
-from sklearn.datasets import load_breast_cancer, make_moons, make_blobs
+from sklearn.datasets import (
+    load_breast_cancer, 
+    make_moons, 
+    make_blobs
+)
 from torchvision import transforms
 from torchvision.datasets import MNIST, CIFAR10
 
@@ -41,7 +45,8 @@ def breast_cancer_dataset() -> DATASET:
 
 def moons_dataset(random_state: int = None) -> DATASET:
     data, labels = make_moons(
-        n_samples=150, shuffle=True, noise=None, random_state=random_state
+        n_samples=150, shuffle=True, 
+        noise=None, random_state=random_state
     )
     return DATASET(data, labels)
 
@@ -86,7 +91,10 @@ def mnist_dataset() -> TensorSet:
 
 def cifar_10(sample: Sampling, size: int) -> TensorSet:
     transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        [
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
     )
     train_dataset = CIFAR10(
         root="./data", train=True, download=True, transform=transform
@@ -97,7 +105,10 @@ def cifar_10(sample: Sampling, size: int) -> TensorSet:
     )
 
     full_train_ds = torch.cat(
-        [torch.from_numpy(train_dataset.data), torch.from_numpy(test_dataset.data)]
+        [
+            torch.from_numpy(train_dataset.data), 
+            torch.from_numpy(test_dataset.data)
+         ]
     )
     full_train_labels = torch.cat(
         [
@@ -107,7 +118,8 @@ def cifar_10(sample: Sampling, size: int) -> TensorSet:
     )
     classwise_labels = get_classwise_labels(full_train_labels)
     samples = get_random_inputs(
-        full_train_ds, full_train_labels, classwise_labels, sample_size=size
+        full_train_ds, full_train_labels,
+        classwise_labels, sample_size=size
     )
 
     match sample:
@@ -119,7 +131,10 @@ def cifar_10(sample: Sampling, size: int) -> TensorSet:
             raise RuntimeError("cifar-10:none of the cases match")
 
 
-def get_classwise_labels(full_labels: torch.Tensor, num_class: int = 10) -> np.ndarray:
+def get_classwise_labels(
+        full_labels: torch.Tensor,
+        num_class: int = 10
+) -> np.ndarray:
     classwise_labels = []
     for class_label in range(num_class):
         for index, label in enumerate(full_labels):
