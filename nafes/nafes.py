@@ -1242,7 +1242,7 @@ def get_hits_significance(summary_list: np.ndarray) -> HitsInfo:
     hits = [summary_dict[key] for key in sorted_feature_keys]
 
     return HitsInfo(
-        features=sorted_feature_keys, 
+        features=np.array(sorted_feature_keys), 
         hits=hits,
     )
 
@@ -1451,11 +1451,11 @@ def reject(
                 insignificant_hit,
             )
             return LocalRejectStrategy(
-                significant=strategy.significant,
-                insignificant=strategy.insignificant,
-                significant_hit=strategy.significant_hit,
-                insignificant_hit=strategy.insignificant_hit,
-                tentative=strategy.tentative,
+                significant=np.array(strategy.significant),
+                insignificant=np.array(strategy.insignificant),
+                significant_hit=np.array(strategy.significant_hit),
+                insignificant_hit=np.array(strategy.insignificant_hit),
+                tentative=np.array(strategy.tentative),
             )
         case False:
             return LocalRejectStrategy(
