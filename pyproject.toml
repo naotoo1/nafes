@@ -1,6 +1,6 @@
 [project]
 name = "nafes"
-version = "0.0.3"
+version = "0.0.4"
 description = "A python project for prototype-based feature selection"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -50,7 +50,7 @@ exclude = ["docs*"]
 universal = true
 
 [tool.bumpversion]
-current_version = "0.0.3"
+current_version = "0.0.4"
 commit = true
 tag = true
 
