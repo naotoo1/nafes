@@ -72,7 +72,11 @@ def test_nafes_rejection_strategy():
 
     tentative_features = rejected_strategy.tentative
 
-    feature_space = list(significant_features) + list(insignificant_features) + list(tentative_features)
+    feature_space = (
+        list(significant_features) +
+        list(insignificant_features) +
+        list(tentative_features)
+    )
 
     assert input_data.shape[1] == len(feature_space)
 
