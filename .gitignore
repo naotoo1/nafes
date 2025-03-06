@@ -107,3 +107,12 @@ ENV/
 
 *.txt
 !requirements_docs.txt
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
