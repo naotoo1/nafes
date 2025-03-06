@@ -16,6 +16,7 @@ in {
     pythonPackages.pandas
     pythonPackages.scipy
     pythonPackages.torch
+    pythonPackages.torchvision
     pythonPackages.pytorch-lightning
     pythonPackages.pip
   ];
