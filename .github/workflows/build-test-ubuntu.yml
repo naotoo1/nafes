@@ -1,3 +1,274 @@
+# name: Test Multiple Python Versions and Container Builds
+# on:
+#   push:
+#     branches: [ main ]
+#     paths:
+#       - 'devenv.nix'
+#       - 'devenv.lock'
+#       - '.github/workflows/**'
+#   pull_request:
+#     branches: [ main ]
+#   workflow_dispatch:
+
+# jobs:
+#   test-python-versions:
+#     name: Test Python ${{ matrix.python_version }}
+#     runs-on: ubuntu-latest
+#     strategy:
+#       matrix:
+#         python_version: ['311', '312']
+#       fail-fast: false
+    
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+      
+#       # Install Nix using the dedicated GitHub Action
+#       - name: Install Nix
+#         uses: cachix/install-nix-action@v22
+#         with:
+#           nix_path: nixpkgs=channel:nixos-unstable
+#           extra_nix_config: |
+#             experimental-features = nix-command flakes
+      
+#       # Install devenv manually with Nix
+#       - name: Install devenv
+#         run: |
+#           # Install devenv using nix command
+#           nix profile install --accept-flake-config "github:cachix/devenv/latest"
+#           # Check version
+#           devenv --version
+      
+#       # Update Python version in devenv.nix
+#       - name: Update Python version in devenv.nix
+#         run: |
+#           echo "Updating devenv.nix with Python ${{ matrix.python_version }}"
+#           # Create a backup of the original file
+#           cp devenv.nix devenv.nix.backup
+          
+#           # Use sed to replace all instances of pythonXXX references
+#           sed -i "s/python3[0-9][0-9]/python${{ matrix.python_version }}/g" devenv.nix
+          
+#           # Show diff of changes
+#           diff devenv.nix.backup devenv.nix || true
+          
+#           echo "Updated devenv.nix:"
+#           cat devenv.nix
+      
+#       # Generate new devenv.lock file
+#       - name: Generate new devenv.lock file
+#         run: |
+#           # Generate the lock file
+#           devenv update
+          
+#           echo "Generated new devenv.lock with Python ${{ matrix.python_version }}:"
+#           cat devenv.lock
+      
+#       # Generate requirements.in and lock files
+#       - name: Generate requirements.in and lock files
+#         run: |
+#           # Use the generate-requirements script defined in devenv.nix
+#           devenv shell -- generate-requirements
+          
+#           # Update lock files using the script from devenv.nix
+#           devenv shell -- update-lock-files
+          
+#           # Show generated files
+#           echo "=== Generated requirements.in ==="
+#           cat requirements.in
+          
+#           echo "=== Generated uv.lock ==="
+#           cat uv.lock
+      
+#       - name: Run tests with devenv
+#         run: |
+#           # Run tests with the Python version from devenv
+#           echo "=== Testing Python version ==="
+#           devenv shell -- python --version
+          
+#           # Check if uv is available
+#           echo "=== Checking uv installation ==="
+#           devenv shell -- uv --version
+          
+#           # Install package dependencies
+#           echo "=== Installing packages from lock ==="
+#           devenv shell -- install-from-lock
+          
+#           # Install package itself
+#           echo "=== Installing package ==="
+#           devenv shell -- uv pip install -e .[all]
+          
+#           # Run unittest tests
+#           echo "=== Running unittest tests ==="
+#           devenv shell -- python -m unittest discover tests/
+          
+#           # Run pytest tests
+#           echo "=== Running pytest tests ==="
+#           devenv shell -- pytest tests/
+          
+#           # List installed packages
+#           echo "=== Installed packages ==="
+#           devenv shell -- pip list
+      
+#       # Save the working devenv files for this Python version
+#       - name: Save working devenv files
+#         if: success()
+#         run: |
+#           # Create directory if it doesn't exist
+#           mkdir -p ./python-versions
+          
+#           # Save the working files with Python version in the name
+#           cp devenv.nix ./python-versions/devenv-py${{ matrix.python_version }}.nix
+#           cp devenv.lock ./python-versions/devenv-py${{ matrix.python_version }}.lock
+#           cp requirements.in ./python-versions/requirements-py${{ matrix.python_version }}.in
+#           cp uv.lock ./python-versions/uv-py${{ matrix.python_version }}.lock
+      
+#       # Upload the Python version-specific files as artifacts
+#       - name: Upload devenv files
+#         if: success()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: devenv-python-${{ matrix.python_version }}
+#           path: ./python-versions/
+#           retention-days: 7
+
+#   verify-container-builds:
+#     name: Verify ${{ matrix.container_type }} Container Build
+#     runs-on: ubuntu-latest
+#     needs: test-python-versions
+#     strategy:
+#       matrix:
+#         container_type: ['gpu', 'cpu']
+#       fail-fast: false
+    
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+      
+#       # Install Nix using the dedicated GitHub Action
+#       - name: Install Nix
+#         uses: cachix/install-nix-action@v22
+#         with:
+#           nix_path: nixpkgs=channel:nixos-unstable
+#           extra_nix_config: |
+#             experimental-features = nix-command flakes
+      
+#       # Install devenv
+#       - name: Install devenv
+#         run: |
+#           nix profile install --accept-flake-config "github:cachix/devenv/latest"
+#           devenv --version
+      
+#       # Generate requirements and lock files
+#       - name: Generate requirements.in and lock files
+#         run: |
+#           devenv shell -- generate-requirements
+#           devenv shell -- update-lock-files
+      
+#       # Build and verify GPU Container
+#       - name: Build and verify GPU Container
+#         if: matrix.container_type == 'gpu'
+#         run: |
+#           echo "Building GPU container to verify Dockerfile"
+#           devenv shell -- create-reproducible-container
+          
+#           # Verify container starts and Python is available
+#           echo "Verifying container starts with Python available"
+#           docker run --rm gpu-prototorch-env-locked python --version
+          
+#           # Extract Python packages from devenv.nix
+#           echo "Extracting Python packages from devenv.nix"
+#           NIX_PACKAGES=$(grep -o "pythonPackages\.[a-zA-Z0-9-]*" devenv.nix | sed 's/pythonPackages\.//g' | sort | uniq)
+#           echo "Found Nix packages: $NIX_PACKAGES"
+          
+#           # Extract non-Nix packages from requirements.in
+#           NON_NIX_PACKAGES=$(grep -v "^#" requirements.in | grep -v "^-e" | tr -d ' ' | tr '\n' ' ')
+#           echo "Found non-Nix packages: $NON_NIX_PACKAGES"
+          
+#           # Create a verification script that dynamically checks all packages
+#           cat > verify_packages.py << EOF
+#           import importlib.util
+#           import sys
+#           import os
+          
+#           # Get packages from environment variables
+#           nix_packages = os.environ.get('NIX_PACKAGES', '').split()
+#           non_nix_packages = os.environ.get('NON_NIX_PACKAGES', '').split()
+          
+#           # Fix package naming for imports if needed
+#           package_name_map = {
+#               'scikit-learn': 'sklearn',
+#               'pytorch-lightning': 'pytorch_lightning',
+#               'torchvision': 'torchvision',
+#               'pip': 'pip'  # Skip checking pip
+#           }
+          
+#           # Combined list of all packages to check
+#           all_packages = []
+#           for pkg in nix_packages:
+#               if pkg != 'pip':  # Skip pip as it's a tool, not a library
+#                   all_packages.append(package_name_map.get(pkg, pkg))
+                  
+#           for pkg in non_nix_packages:
+#               if pkg and pkg != 'pip':  # Skip empty strings and pip
+#                   all_packages.append(pkg)
+          
+#           # Check each package
+#           all_passed = True
+#           print("== Package Verification Results ==")
+          
+#           for package in all_packages:
+#               try:
+#                   spec = importlib.util.find_spec(package)
+#                   if spec is None:
+#                       raise ImportError(f"Module {package} not found")
+                      
+#                   # Try to import the module to verify it's properly installed
+#                   module = importlib.import_module(package)
+#                   version = getattr(module, "__version__", "unknown version")
+#                   print(f"✅ {package} - {version}")
+#               except Exception as e:
+#                   print(f"❌ {package} - FAILED: {str(e)}")
+#                   all_passed = False
+          
+#           # Exit with error if any package failed
+#           sys.exit(0 if all_passed else 1)
+#           EOF
+          
+#           # Run verification script in container with package lists
+#           echo "Verifying all required packages are installed properly"
+#           docker run --rm -v "$(pwd)/verify_packages.py:/app/verify_packages.py" \
+#             -e NIX_PACKAGES="$NIX_PACKAGES" \
+#             -e NON_NIX_PACKAGES="$NON_NIX_PACKAGES" \
+#             gpu-prototorch-env-locked python /app/verify_packages.py
+      
+#       # Build and verify CPU Container
+#       - name: Build and verify CPU Container
+#         if: matrix.container_type == 'cpu'
+#         run: |
+#           echo "Building CPU container to verify Dockerfile"
+#           devenv shell -- create-cpu-container
+          
+#           # Verify container starts and Python is available
+#           echo "Verifying container starts with Python available"
+#           docker run --rm cpu-prototorch-env-locked python --version
+          
+#           # Extract Python packages from devenv.nix
+#           echo "Extracting Python packages from devenv.nix"
+#           NIX_PACKAGES=$(grep -o "pythonPackages\.[a-zA-Z0-9-]*" devenv.nix | sed 's/pythonPackages\.//g' | sort | uniq)
+#           echo "Found Nix packages: $NIX_PACKAGES"
+          
+#           # Extract non-Nix packages from requirements.in
+#           NON_NIX_PACKAGES=$(grep -v "^#" requirements.in | grep -v "^-e" | tr -d ' ' | tr '\n' ' ')
+#           echo "Found non-Nix packages: $NON_NIX_PACKAGES"
+          
+#           # Run verification script in container with package lists
+#           echo "Verifying all required packages are installed properly"
+#           docker run --rm -v "$(pwd)/verify_packages.py:/app/verify_packages.py" \
+#             -e NIX_PACKAGES="$NIX_PACKAGES" \
+#             -e NON_NIX_PACKAGES="$NON_NIX_PACKAGES" \
+#             cpu-prototorch-env-locked python /app/verify_packages.py
+
 name: Test Multiple Python Versions and Container Builds
 on:
   push:
@@ -159,11 +430,80 @@ jobs:
           nix profile install --accept-flake-config "github:cachix/devenv/latest"
           devenv --version
       
+      # Modify GPU Dockerfile to add python symlink
+      - name: Update GPU Dockerfile to include python symlink
+        if: matrix.container_type == 'gpu'
+        run: |
+          # First update the script that creates the Dockerfile
+          sed -i '/apt-get install -y \\/,/&& rm -rf \/var\/lib\/apt\/lists\/*/ s/&& rm -rf \/var\/lib\/apt\/lists\/\*/\&\& rm -rf \/var\/lib\/apt\/lists\/\* \\\n    \&\& ln -sf \/usr\/bin\/python3 \/usr\/bin\/python/' devenv.nix
+          
+          echo "Updated devenv.nix with python symlink for GPU container:"
+          grep -A 10 "FROM nvidia/cuda" devenv.nix
+      
       # Generate requirements and lock files
       - name: Generate requirements.in and lock files
         run: |
           devenv shell -- generate-requirements
           devenv shell -- update-lock-files
+      
+      # Create verification script
+      - name: Create package verification script
+        run: |
+          cat > verify_packages.py << 'EOF'
+          #!/usr/bin/env python3
+          import importlib.util
+          import sys
+          import os
+
+          def main():
+              # Get packages from environment variables
+              nix_packages = os.environ.get('NIX_PACKAGES', '').split()
+              non_nix_packages = os.environ.get('NON_NIX_PACKAGES', '').split()
+              
+              # Fix package naming for imports if needed
+              package_name_map = {
+                  'scikit-learn': 'sklearn',
+                  'pytorch-lightning': 'pytorch_lightning',
+                  'torchvision': 'torchvision',
+                  'pip': 'pip'  # Skip checking pip
+              }
+              
+              # Combined list of all packages to check
+              all_packages = []
+              for pkg in nix_packages:
+                  if pkg != 'pip':  # Skip pip as it's a tool, not a library
+                      all_packages.append(package_name_map.get(pkg, pkg))
+                      
+              for pkg in non_nix_packages:
+                  if pkg and pkg != 'pip':  # Skip empty strings and pip
+                      all_packages.append(pkg)
+              
+              # Check each package
+              all_passed = True
+              print("== Package Verification Results ==")
+              
+              for package in all_packages:
+                  try:
+                      spec = importlib.util.find_spec(package)
+                      if spec is None:
+                          raise ImportError(f"Module {package} not found")
+                          
+                      # Try to import the module to verify it's properly installed
+                      module = importlib.import_module(package)
+                      version = getattr(module, "__version__", "unknown version")
+                      print(f"✅ {package} - {version}")
+                  except Exception as e:
+                      print(f"❌ {package} - FAILED: {str(e)}")
+                      all_passed = False
+              
+              # Exit with error if any package failed
+              return 0 if all_passed else 1
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          EOF
+          
+          chmod +x verify_packages.py
       
       # Build and verify GPU Container
       - name: Build and verify GPU Container
@@ -185,62 +525,12 @@ jobs:
           NON_NIX_PACKAGES=$(grep -v "^#" requirements.in | grep -v "^-e" | tr -d ' ' | tr '\n' ' ')
           echo "Found non-Nix packages: $NON_NIX_PACKAGES"
           
-          # Create a verification script that dynamically checks all packages
-          cat > verify_packages.py << EOF
-          import importlib.util
-          import sys
-          import os
-          
-          # Get packages from environment variables
-          nix_packages = os.environ.get('NIX_PACKAGES', '').split()
-          non_nix_packages = os.environ.get('NON_NIX_PACKAGES', '').split()
-          
-          # Fix package naming for imports if needed
-          package_name_map = {
-              'scikit-learn': 'sklearn',
-              'pytorch-lightning': 'pytorch_lightning',
-              'torchvision': 'torchvision',
-              'pip': 'pip'  # Skip checking pip
-          }
-          
-          # Combined list of all packages to check
-          all_packages = []
-          for pkg in nix_packages:
-              if pkg != 'pip':  # Skip pip as it's a tool, not a library
-                  all_packages.append(package_name_map.get(pkg, pkg))
-                  
-          for pkg in non_nix_packages:
-              if pkg and pkg != 'pip':  # Skip empty strings and pip
-                  all_packages.append(pkg)
-          
-          # Check each package
-          all_passed = True
-          print("== Package Verification Results ==")
-          
-          for package in all_packages:
-              try:
-                  spec = importlib.util.find_spec(package)
-                  if spec is None:
-                      raise ImportError(f"Module {package} not found")
-                      
-                  # Try to import the module to verify it's properly installed
-                  module = importlib.import_module(package)
-                  version = getattr(module, "__version__", "unknown version")
-                  print(f"✅ {package} - {version}")
-              except Exception as e:
-                  print(f"❌ {package} - FAILED: {str(e)}")
-                  all_passed = False
-          
-          # Exit with error if any package failed
-          sys.exit(0 if all_passed else 1)
-          EOF
-          
-          # Run verification script in container with package lists
+          # Run verification script directly in container
           echo "Verifying all required packages are installed properly"
-          docker run --rm -v "$(pwd)/verify_packages.py:/app/verify_packages.py" \
+          docker run --rm -v "$(pwd)/verify_packages.py:/app/verify_packages.py:ro" \
             -e NIX_PACKAGES="$NIX_PACKAGES" \
             -e NON_NIX_PACKAGES="$NON_NIX_PACKAGES" \
-            gpu-prototorch-env-locked python /app/verify_packages.py
+            gpu-prototorch-env-locked /app/verify_packages.py
       
       # Build and verify CPU Container
       - name: Build and verify CPU Container
@@ -262,9 +552,9 @@ jobs:
           NON_NIX_PACKAGES=$(grep -v "^#" requirements.in | grep -v "^-e" | tr -d ' ' | tr '\n' ' ')
           echo "Found non-Nix packages: $NON_NIX_PACKAGES"
           
-          # Run verification script in container with package lists
+          # Run verification script directly instead of as a module
           echo "Verifying all required packages are installed properly"
-          docker run --rm -v "$(pwd)/verify_packages.py:/app/verify_packages.py" \
+          docker run --rm -v "$(pwd)/verify_packages.py:/app/verify_packages.py:ro" \
             -e NIX_PACKAGES="$NIX_PACKAGES" \
             -e NON_NIX_PACKAGES="$NON_NIX_PACKAGES" \
-            cpu-prototorch-env-locked python /app/verify_packages.py
+            cpu-prototorch-env-locked /app/verify_packages.py
