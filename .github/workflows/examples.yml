@@ -6,8 +6,6 @@ on:
       - 'devenv.nix'
       - 'devenv.lock'
       - '.github/workflows/**'
-      - 'requirements.in'
-      - 'uv.lock'
       - './tests/test_examples.sh'
   pull_request:
     branches: [ main ]
