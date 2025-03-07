@@ -20,7 +20,7 @@ pip install nafes
 ```
 
 If you have installed nafes before and want to upgrade to the latest version, you can run the following command in your terminal:
-Prosemble can be installed using pip.
+Nafes can be installed using pip.
 ```python
 pip install -U nafes
 ```
