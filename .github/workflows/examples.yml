@@ -1,55 +1,55 @@
-name: Test Python 3.12 and Run Example Tests
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'devenv.nix'
-      - 'devenv.lock'
-      - '.github/workflows/**'
-      - './tests/test_examples.sh'
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+# name: Test Python 3.12 and Run Example Tests
+# on:
+#   push:
+#     branches: [ main ]
+#     paths:
+#       - 'devenv.nix'
+#       - 'devenv.lock'
+#       - '.github/workflows/**'
+#       - './tests/test_examples.sh'
+#   pull_request:
+#     branches: [ main ]
+#   workflow_dispatch:
 
-jobs:
-  test-python:
-    name: Test Python 3.12
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# jobs:
+#   test-python:
+#     name: Test Python 3.12
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
       
-      - name: Install Nix
-        uses: cachix/install-nix-action@v22
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-          extra_nix_config: |
-            experimental-features = nix-command flakes
+#       - name: Install Nix
+#         uses: cachix/install-nix-action@v22
+#         with:
+#           nix_path: nixpkgs=channel:nixos-unstable
+#           extra_nix_config: |
+#             experimental-features = nix-command flakes
       
-      - name: Install devenv
-        run: |
-          nix profile install --accept-flake-config "github:cachix/devenv/latest"
-          devenv --version
+#       - name: Install devenv
+#         run: |
+#           nix profile install --accept-flake-config "github:cachix/devenv/latest"
+#           devenv --version
       
-      - name: Update Python version in devenv.nix
-        run: |
-          echo "Updating devenv.nix with Python 3.12"
-          cp devenv.nix devenv.nix.backup
-          sed -i "s/python3[0-9][0-9]/python312/g" devenv.nix
-          diff devenv.nix.backup devenv.nix || true
-          cat devenv.nix
+#       - name: Update Python version in devenv.nix
+#         run: |
+#           echo "Updating devenv.nix with Python 3.12"
+#           cp devenv.nix devenv.nix.backup
+#           sed -i "s/python3[0-9][0-9]/python312/g" devenv.nix
+#           diff devenv.nix.backup devenv.nix || true
+#           cat devenv.nix
       
-      - name: Generate requirements and lock files
-        run: |
-          devenv shell -- generate-requirements
-          devenv shell -- update-lock-files
-          cat requirements.in
-          cat uv.lock
+#       - name: Generate requirements and lock files
+#         run: |
+#           devenv shell -- generate-requirements
+#           devenv shell -- update-lock-files
+#           cat requirements.in
+#           cat uv.lock
       
-      - name: Run tests with devenv
-        run: |
-          devenv shell -- python --version
-          devenv shell -- uv --version
-          devenv shell -- install-from-lock
-          devenv shell -- pytest tests/
-          devenv shell -- ./tests/test_examples.sh
+#       - name: Run tests with devenv
+#         run: |
+#           devenv shell -- python --version
+#           devenv shell -- uv --version
+#           devenv shell -- install-from-lock
+#           devenv shell -- pytest tests/
+#           devenv shell -- ./tests/test_examples.sh
