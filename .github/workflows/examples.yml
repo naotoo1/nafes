@@ -1,22 +1,54 @@
-name: examples
-
+name: Test Python 3.12 and Run Example Tests
 on:
   push:
+    branches: [ main ]
     paths:
-      - "examples/**.py"
+      - 'devenv.nix'
+      - 'devenv.lock'
+      - '.github/workflows/**'
+      - './tests/test_examples.sh'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
 jobs:
-  cpu:
+  test-python:
+    name: Test Python 3.12
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
         with:
-          python-version: "3.11"
-      - name: Install dependencies
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      
+      - name: Install devenv
         run: |
-          python -m pip install --upgrade pip
-          pip install .[all]
-      - name: Run examples
+          nix profile install --accept-flake-config "github:cachix/devenv/latest"
+          devenv --version
+      
+      - name: Update Python version in devenv.nix
         run: |
-          ./tests/test_examples.sh examples/
+          echo "Updating devenv.nix with Python 3.12"
+          cp devenv.nix devenv.nix.backup
+          sed -i "s/python3[0-9][0-9]/python312/g" devenv.nix
+          diff devenv.nix.backup devenv.nix || true
+          cat devenv.nix
+      
+      - name: Generate requirements and lock files
+        run: |
+          devenv shell -- generate-requirements
+          devenv shell -- update-lock-files
+          cat requirements.in
+          cat uv.lock
+      
+      - name: Run tests with devenv
+        run: |
+          devenv shell -- python --version
+          devenv shell -- uv --version
+          devenv shell -- install-from-lock
+          devenv shell -- ./tests/test_examples.sh

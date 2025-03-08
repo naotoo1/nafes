@@ -13,5 +13,5 @@ for script in *.py; do
 
     # Execute the Python script
     echo "Running $script..."
-    python "$script"
+    python3 "$script"
 done
