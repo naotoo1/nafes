@@ -63,7 +63,14 @@ update-lock-files
 
 # Install dependencies from lock file
 install-from-lock
-   ``` 
+   ```
+   
+Alternatively, use the one-liner:
+
+   ```bash
+setup-python-env
+   ```
+
 To use the reproducible docker container with support for GPU/CPU:
 
 ```bash
