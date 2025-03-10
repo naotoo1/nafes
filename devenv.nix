@@ -65,15 +65,21 @@ EOL
       echo "requirements.in generated."
     '';
 
-    # Updates uv.lock using requirements.in
+    # Updates uv.lock using requirements.in - ensures old lock file is replaced
     update-lock-files.exec = ''
       echo "Updating lock files..."
       
       # Generate requirements.in
-      ./generate-requirements
+      $PROJECT_DIR/generate-requirements
 
-      # Generate uv.lock
-      echo "Generating uv.lock file..."
+      # Remove existing uv.lock if it exists
+      if [ -f uv.lock ]; then
+        echo "Removing existing uv.lock file..."
+        rm uv.lock
+      fi
+
+      # Generate new uv.lock
+      echo "Generating new uv.lock file..."
       uv pip compile requirements.in -o uv.lock
 
       echo "Lock files updated successfully."
@@ -89,6 +95,40 @@ EOL
         echo "uv.lock not found. Run update-lock-files first."
       fi
     '';
+    
+    # Handles the entire flow from requirements to installation
+    setup-python-env.exec = ''
+      echo "=== Setting up Python environment ==="
+      echo ""
+      
+      # Step 1: Generate requirements.in
+      echo "STEP 1: Generating requirements.in..."
+      generate-requirements
+      
+      # Step 2: Update lock files
+      echo ""
+      echo "STEP 2: Updating lock files..."
+      
+      # Remove existing uv.lock if it exists
+      if [ -f uv.lock ]; then
+        echo "Removing existing uv.lock file..."
+        rm uv.lock
+      fi
+      
+      # Generate new uv.lock
+      echo "Generating new uv.lock file..."
+      uv pip compile requirements.in -o uv.lock
+      
+      # Step 3: Install packages from lock
+      echo ""
+      echo "STEP 3: Installing packages from lock..."
+      uv pip sync uv.lock
+      
+      echo ""
+      echo "=== Python environment setup complete ==="
+      echo "Local package installed in editable mode."
+    '';
+    
 
     quick-install-non-nix-packages.exec = ''
       echo "Quick installing non-Nix packages with uv..."
@@ -240,6 +280,7 @@ EOL
     echo "- Generate requirements.in:  run 'generate-requirements'"
     echo "- Update lock files:         run 'update-lock-files'"
     echo "- Install from lock:         run 'install-from-lock'"
+    echo "- Complete setup (all steps): run 'setup-python-env'"
     echo ""
     echo "Docker commands:"
     echo "- Create GPU container:      run 'create-reproducible-container'"
