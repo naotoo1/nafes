@@ -1,4 +1,0 @@
- 
-# nafes module
-
-::: nafes.nafes
