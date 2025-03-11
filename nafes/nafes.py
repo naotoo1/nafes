@@ -211,7 +211,7 @@ def train_hold_out(
     max_epochs: int = 100,
     noise: float = 0.1,
     batch_size: int = 128,
-    num_workers: int = 4,
+    num_workers: int = 3,
     evaluation_metric: str = EvaluationMetricsType.ACCURACY.value,
 ) -> TrainModelSummary:
     prototypes, omega_matrix = [], []
@@ -229,6 +229,7 @@ def train_hold_out(
         train_ds,
         batch_size=batch_size,
         num_workers=num_workers,
+        persistent_workers=True,
     )
 
     model = matrix_glvq(
@@ -294,7 +295,7 @@ def train_model_by_mv(
     perturbation_distribution: str = "balanced",
     perturbation_ratio: float = 0.2,
     batch_size: int = 128,
-    num_workers: int = 4,
+    num_workers: int = 3,
     evaluation_metric: str = EvaluationMetricsType.ACCURACY.value,
 ) -> TrainModelSummary:
     x_input = torch.from_numpy(input_data).to(torch.float32)
@@ -580,7 +581,7 @@ class NafesPy:
     omega_matrix_initializer: str = "OLTI"
     max_epochs: int = 10
     batch_size: int = 128
-    num_workers: int = 4
+    num_workers: int = 3
     save_model: bool = False
     significance: bool = True
     perturbation_distribution: str = "balanced"
